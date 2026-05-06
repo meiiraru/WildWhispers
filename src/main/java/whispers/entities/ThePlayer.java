@@ -2,15 +2,20 @@ package whispers.entities;
 
 import cinnamon.animation.Animation;
 import cinnamon.math.Maths;
+import cinnamon.math.Rotation;
+import cinnamon.model.GeometryHelper;
 import cinnamon.model.ModelManager;
 import cinnamon.render.Camera;
 import cinnamon.render.MatrixStack;
+import cinnamon.render.batch.VertexConsumer;
 import cinnamon.render.model.AnimatedObjRenderer;
 import cinnamon.render.model.ModelRenderer;
 import cinnamon.utils.Resource;
 import cinnamon.world.DamageType;
 import cinnamon.world.entity.Entity;
 import cinnamon.world.entity.living.LocalPlayer;
+import cinnamon.world.items.Item;
+import cinnamon.world.items.ItemCategory;
 import cinnamon.world.particle.SmokeParticle;
 import cinnamon.world.world.WorldClient;
 import org.joml.Math;
@@ -24,25 +29,49 @@ public class ThePlayer extends LocalPlayer {
 
     private final ModelRenderer model;
 
-    private float tired = 100, hunger = 20;
+    private float hunger = 100, fear = 0;
 
     private int onShrooms = 0;
+
+    private EventType currentEvent = null;
+    private int eventTimer = 0;
+
+    private int tpCooldown = 0;
 
     public ThePlayer() {
         super();
         this.model = ModelManager.load(MODEL_PATH);
         this.getInventory().setSize(1);
         this.getAnimation("idle").setLoop(Animation.Loop.LOOP).play();
+
+        addRenderFeature((source, camera, matrices, delta) -> {
+            if (currentEvent == null || eventTimer <= 0)
+                return;
+
+            matrices.pushMatrix();
+
+            matrices.translate(getPos(delta));
+            matrices.translate(0, 2 + Math.sin((getWorld().getTime() + delta) * 0.1f) * 0.25f, 0);
+            camera.billboard(matrices);
+            matrices.rotate(Rotation.Z.rotationDeg(180f));
+
+            float s = 0.3f;
+            VertexConsumer.WORLD_MAIN.consume(GeometryHelper.quad(matrices, -s, -s, s+s, s+s), new Resource("whispers", "textures/speech_bubble.png"));
+            VertexConsumer.WORLD_MAIN.consume(GeometryHelper.quad(matrices, -s, -s, s+s, s+s), currentEvent.icon);
+
+            matrices.popMatrix();
+        });
     }
 
     @Override
     public void tick() {
         super.tick();
 
+        if (eventTimer > 0 && --eventTimer <= 0)
+            currentEvent = null;
+
         if (this.getMotion().lengthSquared() > Maths.KINDA_SMALL_NUMBER) {
             if (this.isSprinting()) {
-                this.tired -= 2f / 20f;
-
                 this.getAnimation("walk").stop();
                 this.getAnimation("run").setLoop(Animation.Loop.LOOP).play();
 
@@ -52,8 +81,6 @@ public class ThePlayer extends LocalPlayer {
                     ((WorldClient) getWorld()).addParticle(particle);
                 }
             } else {
-                this.tired -= 0.1f / 20f;
-
                 this.getAnimation("run").stop();
                 this.getAnimation("walk").setLoop(Animation.Loop.LOOP).play();
             }
@@ -65,7 +92,16 @@ public class ThePlayer extends LocalPlayer {
         if (this.onShrooms > 0)
             this.onShrooms--;
 
-        hunger -= 0.3f / 20f;
+        setHunger(hunger - 0.3f / 20f);
+
+        if (fear > 0)
+            fear--;
+
+        if (tpCooldown > 0)
+            tpCooldown--;
+
+        if (hunger <= 0 && !isDead())
+            kill();
     }
 
     @Override
@@ -116,11 +152,27 @@ public class ThePlayer extends LocalPlayer {
     @Override
     public boolean damage(Entity source, DamageType type, int amount, boolean crit) {
         if (super.damage(source, type, amount, crit)) {
-            dropItem();
+            dropItem(-1);
+            showEvent(EventType.HURT, 3*20);
             return true;
         }
 
         return false;
+    }
+
+    @Override
+    public boolean heal(int amount) {
+        if (super.heal(amount)) {
+            showEvent(EventType.HEAL, 5*20);
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    protected void spawnHealthChangeParticle(int amount, boolean crit) {
+        //super.spawnHealthChangeParticle(amount, crit);
     }
 
     @Override
@@ -129,18 +181,9 @@ public class ThePlayer extends LocalPlayer {
     }
 
     public void eat(FoodType foodType) {
-        setHunger(hunger + (foodType == FoodType.PUMPKIN ? 20 : 5));
-        setTired(tired + (foodType == FoodType.PUMPKIN ? 10 : 3));
+        setHunger(hunger + (foodType == FoodType.PUMPKIN ? 50 : 10));
         if (foodType == FoodType.SHROOM)
             onShrooms = 20 * 20; //20s effect
-    }
-
-    public float getTired() {
-        return tired;
-    }
-
-    public void setTired(float tired) {
-        this.tired = Maths.clamp(tired, 0, 100);
     }
 
     public float getHunger() {
@@ -148,20 +191,61 @@ public class ThePlayer extends LocalPlayer {
     }
 
     public void setHunger(float hunger) {
+        float prevHunger = this.hunger;
         this.hunger = Maths.clamp(hunger, 0, 100);
-    }
-
-    @Override
-    protected float getMoveSpeed() {
-        return super.getMoveSpeed() * (this.tired > 0 ? 1f : 0.35f);
-    }
-
-    @Override
-    public void updateMovementFlags(boolean sneaking, boolean sprinting, boolean flying) {
-        super.updateMovementFlags(sneaking, sprinting && this.tired > 5, flying);
+        //if (prevHunger < this.hunger)
+        //    showEvent(EventType.EAT, 5*20);
+        if (this.hunger <= 20)
+            showEvent(EventType.HUNGER, 3*20);
     }
 
     public boolean isOnShrooms() {
         return onShrooms > 0;
+    }
+
+    public boolean isHoldingFood() {
+        Item item = getHoldingItem();
+        return item != null && item.getCategory() == ItemCategory.FOOD;
+    }
+
+    public boolean hasFear() {
+        return fear > 0;
+    }
+
+    public void setFear(int fearTicks) {
+        float prevFear = this.fear;
+        this.fear = fearTicks;
+        if (prevFear < this.fear)
+            showEvent(EventType.FEAR, fearTicks);
+    }
+
+    public void showEvent(EventType type, int duration) {
+        if (this.currentEvent != null && this.currentEvent.ordinal() < type.ordinal())
+            return;
+
+        this.currentEvent = type;
+        this.eventTimer = duration;
+    }
+
+    public boolean isOnTeleportCooldown() {
+        return tpCooldown > 0;
+    }
+
+    public void setTeleportCooldown(int ticks) {
+        this.tpCooldown = ticks;
+    }
+
+    public enum EventType {
+        HEAL(new Resource("whispers", "textures/icons/heart.png")),
+        HURT(new Resource("whispers", "textures/icons/broken_heart.png")),
+        FEAR(new Resource("whispers", "textures/icons/fear.png")),
+        EAT(new Resource("whispers", "textures/icons/food.png")),
+        HUNGER(new Resource("whispers", "textures/icons/hunger.png"));
+
+        public final Resource icon;
+
+        EventType(Resource resource) {
+            this.icon = resource;
+        }
     }
 }

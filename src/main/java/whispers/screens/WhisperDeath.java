@@ -22,7 +22,7 @@ public class WhisperDeath extends Screen {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
 
-        Text.of("You died...").withStyle(Style.EMPTY.color(0xFF880000))
+        Text.translated("whispers.ded").withStyle(Style.EMPTY.color(0xFF880000))
                 .render(VertexConsumer.MAIN, matrices, width / 2f, height / 2f - 60, Alignment.TOP_CENTER);
     }
 

@@ -1,0 +1,22 @@
+{
+  "gui.play": "Play",
+
+  "whispers.ded": "You died...",
+
+  "whispers.intro": "You are hungry! Find food",
+  "whispers.intro2": "Winter is coming, stock up food for the cold season",
+  "whispers.night": "It's getting dark! Find shelter",
+
+  "whispers.den_food": "Required Food: %s",
+  "whispers.den_food_success": "You have enough food! You can now enter the den",
+  "whispers.day_count": "Day %s",
+
+  "whispers.press": "Press %s",
+  "whispers.use": "Use %s",
+  "whispers.to_use": "to eat/interact",
+  "whispers.to_jump": "to jump",
+  "whispers.to_look": "to zoom and rotate the camera",
+  "whispers.to_move": "to move",
+  "whispers.to_sprint": "to sprint",
+  "whispers.to_drop": "to drop your item"
+}

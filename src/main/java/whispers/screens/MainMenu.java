@@ -26,7 +26,7 @@ public class MainMenu extends Screen {
          ContainerGrid grid = new ContainerGrid(0, 0, 4);
 
          //open world
-         Button worldButton = new cinnamon.gui.screens.MainMenu.MainButton(Text.translated("Play"), button -> new TestWorld().init());
+         Button worldButton = new cinnamon.gui.screens.MainMenu.MainButton(Text.translated("gui.play"), button -> new TestWorld().init());
          grid.addWidget(worldButton);
 
          //settings

@@ -2,6 +2,7 @@ package whispers.items;
 
 import cinnamon.utils.Resource;
 import cinnamon.world.items.Item;
+import cinnamon.world.items.ItemCategory;
 import whispers.entities.ThePlayer;
 
 public class Shroom extends Item {
@@ -10,6 +11,11 @@ public class Shroom extends Item {
 
     public Shroom() {
         super("Shroom", 1, 1, model);
+    }
+
+    @Override
+    public ItemCategory getCategory() {
+        return ItemCategory.FOOD;
     }
 
     @Override

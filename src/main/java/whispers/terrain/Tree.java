@@ -9,7 +9,7 @@ import whispers.particles.LeafParticle;
 
 public class Tree extends Terrain {
 
-    public static final Resource model = new Resource("whispers", "models/tree/model.obj");
+    public static final Resource model = new Resource("whispers", "models/tree2/model.obj");
 
     public Tree() {
         super(model, TerrainRegistry.CUSTOM);
@@ -25,6 +25,7 @@ public class Tree extends Terrain {
             pos.y = getAABB().minY() + getAABB().getHeight() * 0.75f;
             leaf.setPos(pos);
             leaf.setMotion((float) Math.random() * 0.2f - 0.1f, -0.1f, (float) Math.random() * 0.2f - 0.1f);
+            leaf.getCollisionMask().setExcludeMask(1, true);
             ((WorldClient) getWorld()).addParticle(leaf);
         }
     }

@@ -11,6 +11,7 @@ import cinnamon.world.entity.PhysEntity;
 import cinnamon.world.entity.collectable.ItemEntity;
 import cinnamon.world.entity.living.LivingEntity;
 import cinnamon.world.entity.living.Player;
+import cinnamon.world.items.Item;
 import cinnamon.world.world.WorldClient;
 import org.joml.Vector3f;
 
@@ -63,20 +64,33 @@ public class BearTrap extends PhysEntity {
             return;
         }
 
+        Entity target;
+
         if (entity instanceof LivingEntity le) {
+            Item holding = le.getHoldingItem();
+            if (holding == null) {
+                snapTime = 60 + snapAnim; //3s + anim time
+                target = le;
+            } else {
+                target = le.dropItem(-1);
+            }
+
             le.damage(null, DamageType.TERRAIN, 5, false);
-            snapTime = 60 + snapAnim; //3s + anim time
-        } else if (entity instanceof ItemEntity item) {
-            item.setPickUpDelay(100);
-            item.setGravity(0f);
-            item.setAge(-1);
-            snapTime = -1;
+        } else if (entity instanceof ItemEntity itemEntity) {
+            target = itemEntity;
         } else {
             super.collide(entity, result, toMove);
             return;
         }
 
-        this.trappedEntity = entity;
+        if (target instanceof ItemEntity item) {
+            item.setPickUpDelay(100);
+            item.setGravity(0f);
+            item.setAge(-1);
+            snapTime = -1;
+        }
+
+        this.trappedEntity = target;
         this.getAnimation("snap").setLoop(Animation.Loop.HOLD).play();
         ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/beartrap_setoff.ogg"), SoundCategory.ENTITY, getPos());
     }
