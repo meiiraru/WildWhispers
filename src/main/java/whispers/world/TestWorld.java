@@ -410,6 +410,7 @@ public class TestWorld extends WorldClient {
             case GLFW.GLFW_KEY_S -> this.camZoom = Math.min(this.camZoom + 1f, 15f);
 
             case GLFW.GLFW_KEY_Z -> this.player.useAction();
+            case GLFW.GLFW_KEY_X -> this.player.attackAction();
             case GLFW.GLFW_KEY_C -> this.player.dropItem(-1);
             case GLFW.GLFW_KEY_G -> spawnDebugWeapons();
         }
