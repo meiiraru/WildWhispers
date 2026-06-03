@@ -13,6 +13,7 @@ public class Tree extends Terrain {
 
     public Tree() {
         super(model, TerrainRegistry.CUSTOM);
+        getCollisionMask().setMask(1, true);
     }
 
     @Override

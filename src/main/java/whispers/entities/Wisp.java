@@ -31,7 +31,7 @@ public class Wisp extends PhysEntity {
         //    VertexConsumer.WORLD_MAIN_EMISSIVE.consume(GeometryHelper.box(matrices, -r, -r, -r, r, r, r, Colors.BLUE.argb));
         //    matrices.popMatrix();
         //});
-        this.light = new PointLight().falloff(1f).glareSize(3f).color(Colors.BLUE.rgb).castsShadows(false).intensity(0f);
+        this.light = new PointLight().falloff(1f).glareSize(3f).color(Colors.BLUE.rgb).castsShadows(true).intensity(0f);
     }
 
     @Override
@@ -50,19 +50,19 @@ public class Wisp extends PhysEntity {
     public void tick() {
         super.tick();
 
-        Vector3f pos = getPos();
+        Vector3f pos = getTransform().getPos();
         moveTo(pos.x, pos.y + (float) Math.sin(getWorld().getTime() * 0.05f) * 0.01f, pos.z);
 
         if (isVisible() && getWorld().getTime() % 10 == 0) {
             WispParticle particle = new WispParticle(40);
-            Vector3f ppos = new Vector3f(getPos());
+            Vector3f ppos = new Vector3f(pos);
             ppos.add((float) (Math.random() * 0.5f - 0.25f), (float) (Math.random() * 0.5f - 0.25f), (float) (Math.random() * 0.5f - 0.25f));
             particle.setPos(ppos);
             ((WorldClient) getWorld()).addParticle(particle);
         }
 
-        Vector3f playerPos = ((WorldClient) getWorld()).player.getPos();
-        float distance = playerPos.distance(getPos());
+        Vector3f playerPos = ((WorldClient) getWorld()).player.getTransform().getPos();
+        float distance = playerPos.distance(pos);
         float delta = distance > 100 ? 0f : (force ? 1f : (world.isNight() ? Maths.clamp((distance - 5f) / 5f, 0f, 1f) : 0f));
         light.intensity(5f * delta);
         light.glareIntensity(delta);

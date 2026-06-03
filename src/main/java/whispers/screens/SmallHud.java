@@ -1,6 +1,7 @@
 package whispers.screens;
 
 import cinnamon.Client;
+import cinnamon.gui.widgets.types.ProgressBar;
 import cinnamon.model.GeometryHelper;
 import cinnamon.model.Vertex;
 import cinnamon.render.Font;
@@ -10,12 +11,10 @@ import cinnamon.render.batch.VertexConsumer;
 import cinnamon.render.texture.Texture;
 import cinnamon.text.Style;
 import cinnamon.text.Text;
-import cinnamon.utils.Alignment;
-import cinnamon.utils.Resource;
-import cinnamon.utils.TextUtils;
-import cinnamon.utils.UIHelper;
+import cinnamon.utils.*;
 import cinnamon.world.Hud;
 import whispers.entities.ThePlayer;
+import whispers.world.TestWorld;
 
 import java.util.HashSet;
 import java.util.List;
@@ -23,13 +22,24 @@ import java.util.Set;
 
 public class SmallHud extends Hud {
 
+    public static final Resource
+            icons = new Resource("whispers", "textures/icons.png"),
+            pips  = new Resource("whispers", "textures/food.png");
+
     private int dialogDuration, dialogTicks;
     private Text dialogText;
+
+    private float lastHPquery = 1f;
+    private int lastHPShow = 0;
 
     private final Set<Hints> shownHints = new HashSet<>();
 
     @Override
-    public void init() {}
+    public void init() {
+        health = new ProgressBar(0, 0, 60, 8, 1f);
+        health.setColor(Colors.RED);
+        health.setStyle(HUD_STYLE);
+    }
 
     @Override
     public void tick() {
@@ -42,11 +52,46 @@ public class SmallHud extends Hud {
                 continue;
             shownHint.hint.tick();
         }
+
+        if (lastHPShow > 0)
+            lastHPShow--;
     }
 
     @Override
     public void render(MatrixStack matrices, float delta) {
         ThePlayer player = (ThePlayer) Client.getInstance().world.player;
+
+        int width = Client.getInstance().window.scaledWidth;
+        int height = Client.getInstance().window.scaledHeight;
+
+        float hp = player.getHealthProgress();
+
+        if (hp != lastHPquery) {
+            lastHPquery = hp;
+            lastHPShow = 100;
+        }
+        health.setProgress(hp);
+        health.setPos(16,  height / 2 - 2 - health.getHeight());
+
+        if (lastHPShow > 0) {
+            health.render(matrices, 0, 0, delta);
+            VertexConsumer.MAIN.consume(
+                    GeometryHelper.quad(matrices, 4, height / 2f - 2 - 8, 8, 8, 8f, 0f, 8f, 8f, 24, 8),
+                    icons
+            );
+        }
+
+        int food = player.getFood();
+        for (int i = 0; i < ThePlayer.MAX_FOOD; i++) {
+            VertexConsumer.MAIN.consume(
+                    GeometryHelper.quad(matrices, 4 + (8 + 2) * i, height / 2f + 2, 8, 8, i < food ? 8f : 0f, 0f, 8f, 8f, 16, 8),
+                    pips
+            );
+        }
+
+        //render score
+        Text.of("Score: " + ((TestWorld) player.getWorld()).score)
+                .render(VertexConsumer.MAIN, matrices, width / 2f, 4, Alignment.TOP_CENTER);
 
         //render dialog
         renderDialog(matrices, delta);

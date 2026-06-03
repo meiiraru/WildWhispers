@@ -3,11 +3,11 @@ plugins {
 }
 
 group = "com.github.meiiraru"
-version = "0.0.2"
+version = "0.0.3"
 val mainClass = "whispers.Main"
 
 //dependencies
-val cinnamonVersion = "0.4.1"
+val cinnamonVersion = "0.4.2"
 
 val lwjglModules = arrayOf(
     "lwjgl",

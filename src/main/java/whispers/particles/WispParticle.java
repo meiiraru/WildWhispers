@@ -11,6 +11,7 @@ public class WispParticle extends SpriteParticle {
     public WispParticle(int lifetime) {
         super(new Resource("whispers", "textures/fire.png"), lifetime, 0xFFFFFFFF);
         this.setEmissive(true);
+        this.setCastShadows(false);
     }
 
     @Override

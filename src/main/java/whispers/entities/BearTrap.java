@@ -40,7 +40,7 @@ public class BearTrap extends PhysEntity {
             } else if (snapTime == snapAnim) {
                 getAnimation("snap").stop();
                 getAnimation("open").setLoop(Animation.Loop.ONCE).play();
-                ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/beartrap_set.ogg"), SoundCategory.ENTITY, getPos());
+                ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/beartrap_set.ogg"), SoundCategory.ENTITY, getTransform().getPos());
             }
         }
 
@@ -49,10 +49,11 @@ public class BearTrap extends PhysEntity {
 
         if (trappedEntity != null) {
             if (trappedEntity instanceof ItemEntity item) {
+                Vector3f pos = getTransform().getPos();
                 trappedEntity.moveTo(pos.x, pos.y + 0.1f, pos.z);
                 item.setPickUpDelay(100);
             } else {
-                trappedEntity.moveTo(getPos());
+                trappedEntity.moveTo(getTransform().getPos());
             }
         }
     }
@@ -72,10 +73,10 @@ public class BearTrap extends PhysEntity {
                 snapTime = 60 + snapAnim; //3s + anim time
                 target = le;
             } else {
-                target = le.dropItem(-1);
+                target = le.dropItem(-1, true);
             }
 
-            le.damage(null, DamageType.TERRAIN, 5, false);
+            le.damage(null, DamageType.TERRAIN, 10, false);
         } else if (entity instanceof ItemEntity itemEntity) {
             target = itemEntity;
         } else {
@@ -92,7 +93,7 @@ public class BearTrap extends PhysEntity {
 
         this.trappedEntity = target;
         this.getAnimation("snap").setLoop(Animation.Loop.HOLD).play();
-        ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/beartrap_setoff.ogg"), SoundCategory.ENTITY, getPos());
+        ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/beartrap_setoff.ogg"), SoundCategory.ENTITY, getTransform().getPos());
     }
 
     @Override

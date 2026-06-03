@@ -26,10 +26,12 @@ import whispers.world.TestWorld;
 public class ThePlayer extends LocalPlayer {
 
     public static final Resource MODEL_PATH = new Resource("whispers", "models/fox/model.obj");
+    public static final int MAX_FOOD = 5;
 
     private final ModelRenderer model;
 
-    private float hunger = 100, fear = 0;
+    private float fear = 0;
+    private int food = 3;
 
     private int onShrooms = 0;
 
@@ -77,7 +79,7 @@ public class ThePlayer extends LocalPlayer {
 
                 if (getWorld().getTime() % 3 == 0) {
                     SmokeParticle particle = new SmokeParticle((int) (Math.random() * 15) + 10, 0xFFFFFFFF);
-                    particle.setPos(getPos());
+                    particle.setPos(getTransform().getPos());
                     ((WorldClient) getWorld()).addParticle(particle);
                 }
             } else {
@@ -92,7 +94,7 @@ public class ThePlayer extends LocalPlayer {
         if (this.onShrooms > 0)
             this.onShrooms--;
 
-        setHunger(hunger - 0.3f / 20f);
+        //setHunger(hunger - 0.3f / 20f);
 
         if (fear > 0)
             fear--;
@@ -100,8 +102,8 @@ public class ThePlayer extends LocalPlayer {
         if (tpCooldown > 0)
             tpCooldown--;
 
-        if (hunger <= 0 && !isDead())
-            kill();
+        //if (hunger <= 0 && !isDead())
+        //    kill();
     }
 
     @Override
@@ -152,8 +154,18 @@ public class ThePlayer extends LocalPlayer {
     @Override
     public boolean damage(Entity source, DamageType type, int amount, boolean crit) {
         if (super.damage(source, type, amount, crit)) {
-            dropItem(-1);
+            dropItem(-1, true);
+
+            if (getFood() <= 0) {
+                kill();
+                ((TestWorld) getWorld()).gameover();
+            }
+
+            setFood(food - 1);
             showEvent(EventType.HURT, 3*20);
+
+            ((TestWorld) getWorld()).score -= 50;
+
             return true;
         }
 
@@ -181,22 +193,23 @@ public class ThePlayer extends LocalPlayer {
     }
 
     public void eat(FoodType foodType) {
-        setHunger(hunger + (foodType == FoodType.PUMPKIN ? 50 : 10));
+        setFood(food + 1);
         if (foodType == FoodType.SHROOM)
-            onShrooms = 20 * 20; //20s effect
+            onShrooms = 10 * 20; //10s effect
+        ((TestWorld) getWorld()).score += 10;
     }
 
-    public float getHunger() {
-        return hunger;
+    public int getFood() {
+        return food;
     }
 
-    public void setHunger(float hunger) {
-        float prevHunger = this.hunger;
-        this.hunger = Maths.clamp(hunger, 0, 100);
-        //if (prevHunger < this.hunger)
-        //    showEvent(EventType.EAT, 5*20);
-        if (this.hunger <= 20)
-            showEvent(EventType.HUNGER, 3*20);
+    public boolean isFull() {
+        return food >= MAX_FOOD;
+    }
+
+    public void setFood(int food) {
+        this.food = Maths.clamp(food, 0, MAX_FOOD);
+        //showEvent(EventType.EAT, 5*20);
     }
 
     public boolean isOnShrooms() {
