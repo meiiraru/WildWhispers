@@ -45,14 +45,14 @@ public class Bush extends PhysEntity {
     }
 
     @Override
-    protected void collide(PhysEntity entity, Hit result, Vector3f toMove) {
+    protected void collideEntity(PhysEntity entity, Hit result, Vector3f toMove) {
         if (hasFruits && entity instanceof ThePlayer player && player.getInventory().hasSpace()) {
             hasFruits = false;
             fruitTimer = 600; //30s
             player.giveItem(new Fruit());
         }
 
-        super.collide(entity, result, toMove);
+        super.collideEntity(entity, result, toMove);
     }
 
     @Override

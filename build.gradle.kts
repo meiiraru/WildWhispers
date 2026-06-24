@@ -7,7 +7,7 @@ version = "0.0.3"
 val mainClass = "whispers.Main"
 
 //dependencies
-val cinnamonVersion = "0.4.2"
+val cinnamonVersion = "0.4.4"
 
 val lwjglModules = arrayOf(
     "lwjgl",

@@ -40,8 +40,8 @@ public class Dog extends LivingEntity {
     }
 
     @Override
-    protected void collide(PhysEntity entity, Hit result, Vector3f toMove) {
-        super.collide(entity, result, toMove);
+    protected void collideEntity(PhysEntity entity, Hit result, Vector3f toMove) {
+        super.collideEntity(entity, result, toMove);
 
         if (entity instanceof Player player) {
             player.damage(this, DamageType.MELEE, 10, false);

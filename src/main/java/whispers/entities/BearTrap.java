@@ -59,9 +59,9 @@ public class BearTrap extends PhysEntity {
     }
 
     @Override
-    protected void collide(PhysEntity entity, Hit result, Vector3f toMove) {
+    protected void collideEntity(PhysEntity entity, Hit result, Vector3f toMove) {
         if (trappedEntity != null || snapDelay > 0) {
-            super.collide(entity, result, toMove);
+            super.collideEntity(entity, result, toMove);
             return;
         }
 
@@ -80,7 +80,7 @@ public class BearTrap extends PhysEntity {
         } else if (entity instanceof ItemEntity itemEntity) {
             target = itemEntity;
         } else {
-            super.collide(entity, result, toMove);
+            super.collideEntity(entity, result, toMove);
             return;
         }
 

@@ -63,11 +63,11 @@ public class Den extends PhysEntity {
     }
 
     @Override
-    protected void collide(PhysEntity entity, Hit result, Vector3f toMove) {
-        super.collide(entity, result, toMove);
+    protected void collideEntity(PhysEntity entity, Hit result, Vector3f toMove) {
+        super.collideEntity(entity, result, toMove);
         /*
         if (food <= 0) {
-            super.collide(entity, result, toMove);
+            super.collideEntity(entity, result, toMove);
             return;
         }
 
@@ -79,7 +79,7 @@ public class Den extends PhysEntity {
             held.setCount(held.getCount() - 1);
             food--;
         } else {
-            super.collide(entity, result, toMove);
+            super.collideEntity(entity, result, toMove);
         }
          */
     }
