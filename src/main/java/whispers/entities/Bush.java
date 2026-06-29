@@ -1,13 +1,17 @@
 package whispers.entities;
 
+import cinnamon.math.Maths;
 import cinnamon.math.collision.Hit;
 import cinnamon.model.ModelManager;
 import cinnamon.registry.EntityRegistry;
 import cinnamon.render.Camera;
 import cinnamon.render.MatrixStack;
 import cinnamon.render.model.ModelRenderer;
+import cinnamon.sound.SoundCategory;
 import cinnamon.utils.Resource;
 import cinnamon.world.entity.PhysEntity;
+import cinnamon.world.entity.collectable.ItemEntity;
+import cinnamon.world.world.WorldClient;
 import org.joml.Vector3f;
 import whispers.items.Fruit;
 
@@ -33,7 +37,7 @@ public class Bush extends PhysEntity {
         super.tick();
 
         if (fruitTimer > 0 && --fruitTimer == 0)
-            hasFruits = true;
+            this.setFruits(true);
     }
 
     @Override
@@ -50,9 +54,14 @@ public class Bush extends PhysEntity {
             hasFruits = false;
             fruitTimer = 600; //30s
             player.giveItem(new Fruit());
+            ((WorldClient) getWorld()).playSound(ItemEntity.PICK_UP_SOUND, SoundCategory.ENTITY, player.getTransform().getPos()).pitch(Maths.range(0.85f, 1.15f));
         }
 
         super.collideEntity(entity, result, toMove);
+    }
+
+    public void setFruits(boolean hasFruits) {
+        this.hasFruits = hasFruits;
     }
 
     @Override

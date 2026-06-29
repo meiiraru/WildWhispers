@@ -14,7 +14,6 @@ import cinnamon.text.Text;
 import cinnamon.utils.*;
 import cinnamon.world.Hud;
 import whispers.entities.ThePlayer;
-import whispers.world.TestWorld;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,22 +27,34 @@ public class SmallHud extends Hud {
 
     private int dialogDuration, dialogTicks;
     private Text dialogText;
+    private int controlsTicks;
 
     private float lastHPquery = 1f;
     private int lastHPShow = 0;
 
+    private float lastStaminaQuery = 1f;
+    private int lastStaminaShow = 0;
+
     private final Set<Hints> shownHints = new HashSet<>();
+
+    private ProgressBar stamina;
 
     @Override
     public void init() {
         health = new ProgressBar(0, 0, 60, 8, 1f);
         health.setColor(Colors.RED);
-        health.setStyle(HUD_STYLE);
+
+        stamina = new ProgressBar(0, 0, 60, 8, 1f);
+        stamina.setColor(Colors.YELLOW);
     }
 
     @Override
     public void tick() {
         super.tick();
+
+        if (Client.getInstance().world.isPaused())
+            return;
+
         if (dialogTicks < dialogDuration)
             dialogTicks++;
 
@@ -55,6 +66,12 @@ public class SmallHud extends Hud {
 
         if (lastHPShow > 0)
             lastHPShow--;
+
+        if (lastStaminaShow > 0)
+            lastStaminaShow--;
+
+        if (controlsTicks > 0)
+            controlsTicks--;
     }
 
     @Override
@@ -71,27 +88,44 @@ public class SmallHud extends Hud {
             lastHPShow = 100;
         }
         health.setProgress(hp);
-        health.setPos(16,  height / 2 - 2 - health.getHeight());
+        health.setPos(4 + 16 + 2, height / 2 + 2 + health.getHeight() + 4);
 
         if (lastHPShow > 0) {
             health.render(matrices, 0, 0, delta);
             VertexConsumer.MAIN.consume(
-                    GeometryHelper.quad(matrices, 4, height / 2f - 2 - 8, 8, 8, 8f, 0f, 8f, 8f, 24, 8),
-                    icons
+                    GeometryHelper.quad(matrices, 4, height / 2f + 2 + 8, 16, 16),
+                    new Resource("whispers", "textures/icons/heart.png")
+            );
+        }
+
+        float stami = player.getStamina() / 100f;
+        if (stami != lastStaminaQuery) {
+            lastStaminaQuery = stami;
+            lastStaminaShow = 100;
+        }
+        this.stamina.setProgress(stami);
+        this.stamina.setPos(4 + 16 + 2, health.getY() + health.getHeight() + 4 + 2 + 4);
+
+        if (lastStaminaShow > 0) {
+            stamina.render(matrices, 0, 0, delta);
+            VertexConsumer.MAIN.consume(
+                    GeometryHelper.quad(matrices, 4, health.getY() + health.getHeight() + 4 + 2, 16, 16),
+                    new Resource("whispers", "textures/icons/energy.png")
             );
         }
 
         int food = player.getFood();
-        for (int i = 0; i < ThePlayer.MAX_FOOD; i++) {
-            VertexConsumer.MAIN.consume(
-                    GeometryHelper.quad(matrices, 4 + (8 + 2) * i, height / 2f + 2, 8, 8, i < food ? 8f : 0f, 0f, 8f, 8f, 16, 8),
-                    pips
-            );
-        }
+        VertexConsumer.MAIN.consume(
+                GeometryHelper.quad(matrices, 4, stamina.getY() + stamina.getHeight() + 4 + 2, 16, 16),
+                new Resource("whispers", "textures/icons/food.png")
+        );
+        Text.of("x" + food)
+                .withStyle(Style.EMPTY.outlined(true))
+                .render(VertexConsumer.MAIN, matrices, 4 + 16 + 2, stamina.getY() + stamina.getHeight() + 4 + 2 + 8, Alignment.CENTER_LEFT);
 
         //render score
-        Text.of("Score: " + ((TestWorld) player.getWorld()).score)
-                .render(VertexConsumer.MAIN, matrices, width / 2f, 4, Alignment.TOP_CENTER);
+        //Text.of("Score: " + ((TestWorld) player.getWorld()).score)
+        //        .render(VertexConsumer.MAIN, matrices, width / 2f, 4, Alignment.TOP_CENTER);
 
         //render dialog
         renderDialog(matrices, delta);
@@ -104,6 +138,19 @@ public class SmallHud extends Hud {
             if (shownHint.hint.isActive()) {
                 shownHint.hint.render(matrices, delta);
             }
+        }
+
+        //render controls
+        if (controlsTicks > 0) {
+            int fade = 20;
+            float alpha = Math.min((float) controlsTicks / fade, 1f);
+            int color = ((int) (alpha * 0xFF) << 24) | 0xFFFFFF;
+
+            Vertex[] vertices = GeometryHelper.quad(matrices, 4, 4, 116, 116);
+            for (Vertex vertex : vertices)
+                vertex.color(color);
+
+            VertexConsumer.MAIN.consume(vertices, new Resource("whispers", "textures/hints/controls.png"));
         }
 
         //draw vignette
@@ -138,7 +185,7 @@ public class SmallHud extends Hud {
         //text
         List<Text> texts = TextUtils.warpToWidth(dialogText, window.scaledWidth - 8);
         Style s = Style.EMPTY.color(color);
-        Font f = dialogText.getStyle().getGuiStyle().getFont();
+        Font f = dialogText.getStyle().getGuiSkin().getFont();
         float textHeight = TextUtils.getHeight(texts);
         float line = f.lineHeight + f.lineGap;
 
@@ -149,6 +196,10 @@ public class SmallHud extends Hud {
 
         for (int i = 0; i < texts.size(); i++)
             texts.get(i).withStyle(s).render(VertexConsumer.MAIN, matrices, 4, window.scaledHeight - 4 - textHeight + i * line);
+    }
+
+    public void displayControls(int duration) {
+        this.controlsTicks = duration;
     }
 
     public void addDialog(int duration, Text text) {

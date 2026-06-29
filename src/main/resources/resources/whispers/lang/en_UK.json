@@ -3,9 +3,9 @@
 
   "whispers.ded": "You died...",
 
-  "whispers.intro": "You are hungry! Find food",
-  "whispers.intro2": "Winter is coming, stock up food for the cold season",
-  "whispers.night": "It's getting dark! Find shelter",
+  "whispers.intro": "Life is hard in the wild, protect yourself and your family!",
+  "whispers.intro2": "Find food so you can survive!",
+  "whispers.night": "It's night time! Sleep at your shelter",
 
   "whispers.den_food": "Required Food: %s",
   "whispers.den_food_success": "You have enough food! You can now enter the den",

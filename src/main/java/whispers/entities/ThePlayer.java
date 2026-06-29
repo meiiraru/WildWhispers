@@ -2,12 +2,9 @@ package whispers.entities;
 
 import cinnamon.animation.Animation;
 import cinnamon.math.Maths;
-import cinnamon.math.Rotation;
-import cinnamon.model.GeometryHelper;
 import cinnamon.model.ModelManager;
 import cinnamon.render.Camera;
 import cinnamon.render.MatrixStack;
-import cinnamon.render.batch.VertexConsumer;
 import cinnamon.render.model.AnimatedObjRenderer;
 import cinnamon.render.model.ModelRenderer;
 import cinnamon.utils.Resource;
@@ -26,12 +23,14 @@ import whispers.world.TestWorld;
 public class ThePlayer extends LocalPlayer {
 
     public static final Resource MODEL_PATH = new Resource("whispers", "models/fox/model.obj");
-    public static final int MAX_FOOD = 5;
 
     private final ModelRenderer model;
 
     private float fear = 0;
-    private int food = 3;
+    private int food = 0;
+
+    private float stamina = 100f;
+    private int staminaInUse = 0;
 
     private int onShrooms = 0;
 
@@ -46,6 +45,7 @@ public class ThePlayer extends LocalPlayer {
         this.getInventory().setSize(1);
         this.getAnimation("idle").setLoop(Animation.Loop.LOOP).play();
 
+        /*
         addRenderFeature((source, camera, matrices, delta) -> {
             if (currentEvent == null || eventTimer <= 0)
                 return;
@@ -63,6 +63,7 @@ public class ThePlayer extends LocalPlayer {
 
             matrices.popMatrix();
         });
+        */
     }
 
     @Override
@@ -82,6 +83,9 @@ public class ThePlayer extends LocalPlayer {
                     particle.setPos(getTransform().getPos());
                     ((WorldClient) getWorld()).addParticle(particle);
                 }
+
+                staminaInUse = 2*20;
+                setStamina(stamina - 1);
             } else {
                 this.getAnimation("run").stop();
                 this.getAnimation("walk").setLoop(Animation.Loop.LOOP).play();
@@ -101,6 +105,9 @@ public class ThePlayer extends LocalPlayer {
 
         if (tpCooldown > 0)
             tpCooldown--;
+
+        if (--staminaInUse <= 0)
+            setStamina(stamina + (100f / 5f / 20f));
 
         //if (hunger <= 0 && !isDead())
         //    kill();
@@ -154,12 +161,12 @@ public class ThePlayer extends LocalPlayer {
     @Override
     public boolean damage(Entity source, DamageType type, int amount, boolean crit) {
         if (super.damage(source, type, amount, crit)) {
-            dropItem(-1, true);
+            //dropItem(-1, true);
 
-            if (getFood() <= 0) {
-                kill();
-                ((TestWorld) getWorld()).gameover();
-            }
+            //if (getFood() <= 0) {
+            //    kill();
+            //    ((TestWorld) getWorld()).gameover();
+            //}
 
             setFood(food - 1);
             showEvent(EventType.HURT, 3*20);
@@ -196,6 +203,7 @@ public class ThePlayer extends LocalPlayer {
         setFood(food + 1);
         if (foodType == FoodType.SHROOM)
             onShrooms = 10 * 20; //10s effect
+        setStamina(stamina + 10f);
         ((TestWorld) getWorld()).score += 10;
     }
 
@@ -204,11 +212,11 @@ public class ThePlayer extends LocalPlayer {
     }
 
     public boolean isFull() {
-        return food >= MAX_FOOD;
+        return false;
     }
 
     public void setFood(int food) {
-        this.food = Maths.clamp(food, 0, MAX_FOOD);
+        this.food = Math.max(food, 0);
         //showEvent(EventType.EAT, 5*20);
     }
 
@@ -232,6 +240,14 @@ public class ThePlayer extends LocalPlayer {
             showEvent(EventType.FEAR, fearTicks);
     }
 
+    public void setStamina(float stamina) {
+        this.stamina = Maths.clamp(stamina, 0f, 100f);
+    }
+
+    public float getStamina() {
+        return stamina;
+    }
+
     public void showEvent(EventType type, int duration) {
         if (this.currentEvent != null && this.currentEvent.ordinal() < type.ordinal())
             return;
@@ -246,6 +262,11 @@ public class ThePlayer extends LocalPlayer {
 
     public void setTeleportCooldown(int ticks) {
         this.tpCooldown = ticks;
+    }
+
+    @Override
+    public void updateMovementFlags(boolean sneaking, boolean sprinting, boolean flying) {
+        super.updateMovementFlags(sneaking, stamina > 0f && sprinting, flying);
     }
 
     public enum EventType {

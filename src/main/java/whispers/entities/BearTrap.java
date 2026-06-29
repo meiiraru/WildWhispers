@@ -22,7 +22,7 @@ public class BearTrap extends PhysEntity {
     public static final Resource model = new Resource("whispers", "models/bear_trap/model.obj");
     private static final int snapAnim = 60; //3s
 
-    private Entity trappedEntity;
+    private Entity trappedEntity, offerItem;
     private int snapTime, snapDelay;
 
     public BearTrap() {
@@ -56,11 +56,19 @@ public class BearTrap extends PhysEntity {
                 trappedEntity.moveTo(getTransform().getPos());
             }
         }
+
+        if (offerItem != null) {
+            Vector3f pos = getTransform().getPos();
+            offerItem.moveTo(pos.x, pos.y + 0.1f, pos.z);
+            ((ItemEntity) offerItem).setPickUpDelay(100);
+            if (trappedEntity != null && !(trappedEntity instanceof ItemEntity))
+                ((ItemEntity) offerItem).setPickUpDelay(0);
+        }
     }
 
     @Override
     protected void collideEntity(PhysEntity entity, Hit result, Vector3f toMove) {
-        if (trappedEntity != null || snapDelay > 0) {
+        if (trappedEntity != null || snapDelay > 0 || entity == offerItem) {
             super.collideEntity(entity, result, toMove);
             return;
         }
@@ -88,7 +96,8 @@ public class BearTrap extends PhysEntity {
             item.setPickUpDelay(100);
             item.setGravity(0f);
             item.setAge(-1);
-            snapTime = -1;
+            snapTime = 60 + snapAnim;
+            offerItem = item;
         }
 
         this.trappedEntity = target;

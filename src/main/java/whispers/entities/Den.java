@@ -9,6 +9,7 @@ import cinnamon.world.entity.PhysEntity;
 import cinnamon.world.entity.living.LivingEntity;
 import cinnamon.world.world.World;
 import org.joml.Vector3f;
+import whispers.world.TestWorld;
 
 import java.util.UUID;
 
@@ -39,19 +40,15 @@ public class Den extends PhysEntity {
 
     @Override
     public boolean onUse(LivingEntity source) {
-        if (source instanceof ThePlayer player && player.isFull()) {
+        if (source instanceof ThePlayer player && getWorld().isNight()) {
             player.setPos(getPos(0f).add(0, 0.5f, 0));
-            player.setFood(0);
+            //player.setFood(0);
             player.heal(50);
             player.setFear(0);
 
             //((TestWorld) getWorld()).genWorld();
 
-            long time = getWorld().getTime();
-            int dayLen = getWorld().getDayLength();
-            int h = dayLen / 24;
-            long timeToAdd = dayLen + (h / 2) - (time % dayLen);
-            getWorld().setTime(time + timeToAdd);
+            ((TestWorld) getWorld()).skipNight();
 
             Toast.addToast(Text.translated("whispers.day_count", getWorld().getDay() + 1));
             //updateRequiredFood();
@@ -92,5 +89,10 @@ public class Den extends PhysEntity {
     protected void updateRequiredFood() {
         //this.food = ((TestWorld) getWorld()).getRequiredFood();
         //this.day = getWorld().getDay();
+    }
+
+    @Override
+    public boolean shouldRenderOutline() {
+        return super.shouldRenderOutline() || getWorld().isNight();
     }
 }

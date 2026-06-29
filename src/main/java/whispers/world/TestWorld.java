@@ -16,37 +16,33 @@ import cinnamon.text.Text;
 import cinnamon.utils.Resource;
 import cinnamon.utils.UIHelper;
 import cinnamon.world.Abilities;
-import cinnamon.world.WorldObject;
 import cinnamon.world.entity.Entity;
 import cinnamon.world.entity.collectable.ItemEntity;
 import cinnamon.world.entity.misc.Spawner;
 import cinnamon.world.items.BrickItem;
-import cinnamon.world.items.Item;
 import cinnamon.world.particle.RainParticle;
 import cinnamon.world.sky.SkyColors;
+import cinnamon.world.terrain.Rose;
 import cinnamon.world.terrain.Terrain;
 import cinnamon.world.world.WorldClient;
 import org.joml.Math;
-import org.joml.Random;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import whispers.entities.*;
 import whispers.io.LocalInput;
+import whispers.items.AutoBrick;
 import whispers.items.Shroom;
+import whispers.screens.PauseMenu;
 import whispers.screens.SmallHud;
 import whispers.screens.WhisperDeath;
 import whispers.terrain.Tree;
+import whispers.terrain.VendingMachine;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class TestWorld extends WorldClient {
 
     public float camYaw = 135f, camYawLerp = 135f, camZoom = 7.5f, camZoomLerp = 10f;
-
-    private final List<WorldObject> objects = new ArrayList<>();
-    private final Random rand = new Random(3141592L);
 
     private boolean firstNight = true;
     private float downpour = 0f;
@@ -61,6 +57,7 @@ public class TestWorld extends WorldClient {
         this.enableDebugKeys = false;
         this.chatScreen = () -> null;
         this.deathScreen = WhisperDeath::new;
+        this.pauseScreen = PauseMenu::new;
     }
 
     @Override
@@ -70,16 +67,10 @@ public class TestWorld extends WorldClient {
         this.hud.setFade(true, 0, 0x000000);
         scheduledTicks.add(() -> new Await(30, () -> {
             this.hud.setFade(false, 60, 0x000000);
+
+            ((SmallHud) hud).displayControls(25*20);
             ((SmallHud) hud).addDialog(10*20, Text.translated("whispers.intro"));
             new Await(10*20, () -> ((SmallHud) hud).addDialog(10*20, Text.translated("whispers.intro2")));
-            new Await(20*20, () -> {
-                ((SmallHud) hud).displayHint(SmallHud.Hints.JUMP);
-                ((SmallHud) hud).displayHint(SmallHud.Hints.MOVE);
-            });
-            new Await(30*20, () -> {
-                ((SmallHud) hud).displayHint(SmallHud.Hints.SPRINT);
-                ((SmallHud) hud).displayHint(SmallHud.Hints.CAMERA);
-            });
         }));
 
         this.dayLength = 5*60*20;
@@ -104,6 +95,25 @@ public class TestWorld extends WorldClient {
                         t.setMaterial(grass);
                     }
                     case "tree" -> t = new Tree();
+
+                    case "rose", "rose:red" -> {
+                        t = new Rose();
+                        ((Rose) t).setVariant(Rose.Variant.RED);
+                    }
+                    case "rose:white" -> {
+                        t = new Rose();
+                        ((Rose) t).setVariant(Rose.Variant.WHITE);
+                    }
+                    case "rose:pink" -> {
+                        t = new Rose();
+                        ((Rose) t).setVariant(Rose.Variant.PINK);
+                    }
+                    case "rose:black" -> {
+                        t = new Rose();
+                        ((Rose) t).setVariant(Rose.Variant.BLACK);
+                    }
+
+                    case "vending_machine" -> t = new VendingMachine(new AutoBrick(3), 3);
 
                     case "pumpkin" -> e = new Pumpkin();
                     case "spawn" -> {
@@ -142,12 +152,7 @@ public class TestWorld extends WorldClient {
             e.printStackTrace();
         }
 
-        ((ThePlayer) player).showEvent(ThePlayer.EventType.HUNGER, 3*20);
         player.setPos(den.getTransform().getPos());
-    }
-
-    public int getRequiredFood() {
-        return 10 + 5 * getDay();
     }
 
     public void gameover() {
@@ -157,6 +162,42 @@ public class TestWorld extends WorldClient {
 
     public void updateRain() {
         this.downpour = Math.random() < 0.5f ? 0f : ((float) Math.random() * 0.2f + 0.1f);
+    }
+
+    public void skipNight() {
+        long time = getTime();
+        int dayLen = getDayLength();
+        int h = dayLen / 24;
+        long timeToAdd = dayLen + (h / 2) - (time % dayLen);
+        this.setTime(time + timeToAdd);
+
+        for (Entity entity : entities.values()) {
+            if (entity instanceof Bush bush)
+                bush.setFruits(true);
+            else if (entity instanceof Dog dog)
+                dog.kill();
+        }
+    }
+
+    public Entity getLookingEnemy() {
+        //find from all enemies the closest one to the player that is in a 60 degree cone in front of the player and within 15 units distance
+        Entity closest = null;
+        float closestDist = 15f;
+        for (Entity entity : entities.values()) {
+            if (entity instanceof Dog dog && !dog.isDead()) {
+                Vector3f toEntity = entity.getTransform().getPos().sub(player.getTransform().getPos(), new Vector3f());
+                float dist = toEntity.length();
+                if (dist < closestDist) {
+                    Vector3f lookDir = player.getLookDir();
+                    float angle = Math.toDegrees(Math.acos(lookDir.normalize().dot(toEntity.normalize())));
+                    if (angle < 30f) {
+                        closest = entity;
+                        closestDist = dist;
+                    }
+                }
+            }
+        }
+        return closest;
     }
 
     @Override
@@ -169,12 +210,6 @@ public class TestWorld extends WorldClient {
         if (firstNight && isNight()) {
             firstNight = false;
             ((SmallHud) hud).addDialog(10*20, Text.translated("whispers.night"));
-        }
-
-        Item held = player.getHoldingItem();
-        if (held != null) {
-            ((SmallHud) hud).displayHint(SmallHud.Hints.INTERACT);
-            ((SmallHud) hud).displayHint(SmallHud.Hints.DROP);
         }
 
         //rain
@@ -261,7 +296,7 @@ public class TestWorld extends WorldClient {
         Shader.activeShader.setFloat("waveAmplitude", 0.5f);
         Shader.activeShader.setFloat("waveFrequency", 0.0005f);
         Shader.activeShader.setColorRGBA("color", 0xDD00BBFF);
-        Shader.activeShader.setVec2("roughMetal", 0.2f, 0f);
+        Shader.activeShader.setVec2("roughMetal", 0.5f, 0f);
         Shader.activeShader.setVec2("waveDir1", 1f / 3f, 0.3f / 3f);
         Shader.activeShader.setVec2("waveDir2", -0.28f / 3f, 0.7f / 3f);
 
