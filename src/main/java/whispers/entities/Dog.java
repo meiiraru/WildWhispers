@@ -1,6 +1,7 @@
 package whispers.entities;
 
 import cinnamon.animation.Animation;
+import cinnamon.math.Maths;
 import cinnamon.math.collision.Hit;
 import cinnamon.registry.EntityRegistry;
 import cinnamon.utils.Resource;
@@ -20,6 +21,9 @@ public class Dog extends LivingEntity {
 
     private static final Vector3f DIMENSIONS = new Vector3f(0.6f, 1.8f, 0.6f);
 
+    private int wanderCooldown = 0;
+    private final Vector3f wanderTarget = new Vector3f();
+
     public Dog() {
         super(UUID.randomUUID(), MODEL_PATH, 0.5f, 15, 0);
         this.getAnimation("idle").setLoop(Animation.Loop.LOOP).play();
@@ -30,12 +34,29 @@ public class Dog extends LivingEntity {
         super.tick();
 
         Player player = ((TestWorld) getWorld()).player;
-        if (player.getTransform().getPos().distanceSquared(getTransform().getPos()) <= 8*8) {
+        float distance = player.getTransform().getPos().distanceSquared(getTransform().getPos());
+        if (distance <= 8*8 && distance > 0.1f) {
             this.lookAt(player.getTransform().getPos());
             this.impulse(0, 0, 1);
             this.getAnimation("run").setLoop(Animation.Loop.LOOP).play();
+            this.getAnimation("walk").stop();
+            wanderCooldown = 0;
         } else {
             this.getAnimation("run").stop();
+
+            if (--wanderCooldown <= 0) {
+                wanderTarget.set(getTransform().getPos()).add(Maths.range(-5, 5), 0, Maths.range(-5, 5));
+                wanderCooldown = Maths.range(3*20, 5*20);
+            }
+
+            float distanceToTarget = getTransform().getPos().distanceSquared(wanderTarget);
+            if (distanceToTarget > 0.1f) {
+                this.lookAt(wanderTarget);
+                this.impulse(0, 0, 1f);
+                this.getAnimation("walk").setLoop(Animation.Loop.LOOP).play();
+            } else {
+                this.getAnimation("walk").stop();
+            }
         }
     }
 

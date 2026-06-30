@@ -1,28 +1,59 @@
 package whispers.screens;
 
+import cinnamon.Client;
 import cinnamon.gui.Screen;
+import cinnamon.gui.screens.MainMenu;
+import cinnamon.gui.widgets.ContainerGrid;
 import cinnamon.gui.widgets.types.Button;
+import cinnamon.gui.widgets.types.ConfirmPopup;
 import cinnamon.render.MatrixStack;
 import cinnamon.render.batch.VertexConsumer;
 import cinnamon.text.Style;
 import cinnamon.text.Text;
 import cinnamon.utils.Alignment;
+import cinnamon.utils.UIHelper;
+import whispers.world.TestWorld;
 
 public class WhisperDeath extends Screen {
+
+    public WhisperDeath() {
+        ((TestWorld) Client.getInstance().world).lives--;
+    }
 
     @Override
     public void init() {
         super.init();
 
-        Button menu = new Button(width / 2 - 90, height / 2 - 20, 180, 20, Text.translated("gui.death_screen.main_menu"), button -> client.disconnect());
-        this.addWidget(menu);
+        ContainerGrid grid = new ContainerGrid(0, 0, 8, 2);
+
+        Button respawn = new MainMenu.MainButton(Text.translated("whispers.respawn"), button -> {
+            this.close();
+            client.world.respawn(false);
+        });
+        boolean out = ((TestWorld) client.world).lives <= 0;
+        respawn.setActive(!out);
+        if (out) respawn.setTooltip(Text.translated("whispers.respawn.tooltip"));
+        grid.addWidget(respawn);
+
+        ConfirmPopup popup = new ConfirmPopup.YesNo(Text.translated("whispers.leave"), b -> {
+            if (b) client.disconnect();
+        });
+
+        Button menu = new MainMenu.MainButton(Text.translated("whispers.main_menu"), button -> {
+            UIHelper.setPopup(0, 0, popup);
+            popup.open();
+        });
+        grid.addWidget(menu);
+
+        grid.setPos((width - grid.getWidth()) / 2, (int) ((height - grid.getHeight()) * 0.66f));
+        this.addWidget(grid);
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
 
-        Text.translated("whispers.ded").withStyle(Style.EMPTY.color(0xFF880000))
+        Text.translated("whispers.ded").withStyle(Style.EMPTY.outlined(true).color(0xFF880000))
                 .render(VertexConsumer.MAIN, matrices, width / 2f, height / 2f - 60, Alignment.TOP_CENTER);
     }
 

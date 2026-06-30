@@ -40,7 +40,7 @@ public class BearTrap extends PhysEntity {
             } else if (snapTime == snapAnim) {
                 getAnimation("snap").stop();
                 getAnimation("open").setLoop(Animation.Loop.ONCE).play();
-                ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/beartrap_set.ogg"), SoundCategory.ENTITY, getTransform().getPos());
+                ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/beartrap_set.ogg"), SoundCategory.ENTITY, getTransform().getPos()).maxDistance(8);
             }
         }
 
@@ -102,7 +102,7 @@ public class BearTrap extends PhysEntity {
 
         this.trappedEntity = target;
         this.getAnimation("snap").setLoop(Animation.Loop.HOLD).play();
-        ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/beartrap_setoff.ogg"), SoundCategory.ENTITY, getTransform().getPos());
+        ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/beartrap_setoff.ogg"), SoundCategory.ENTITY, getTransform().getPos()).maxDistance(8);
     }
 
     @Override

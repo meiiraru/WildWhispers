@@ -118,4 +118,8 @@ public class VendingMachine extends Terrain {
 
         return true;
     }
+
+    public int getCost() {
+        return cost;
+    }
 }

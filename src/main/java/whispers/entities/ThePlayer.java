@@ -26,8 +26,11 @@ public class ThePlayer extends LocalPlayer {
 
     private final ModelRenderer model;
 
+    private boolean baby = false;
+
     private float fear = 0;
     private int food = 0;
+    private int foodEaten = 0;
 
     private float stamina = 100f;
     private int staminaInUse = 0;
@@ -39,11 +42,12 @@ public class ThePlayer extends LocalPlayer {
 
     private int tpCooldown = 0;
 
-    public ThePlayer() {
+    public ThePlayer(boolean baby) {
         super();
         this.model = ModelManager.load(MODEL_PATH);
         this.getInventory().setSize(1);
         this.getAnimation("idle").setLoop(Animation.Loop.LOOP).play();
+        this.setBaby(baby);
 
         /*
         addRenderFeature((source, camera, matrices, delta) -> {
@@ -85,7 +89,7 @@ public class ThePlayer extends LocalPlayer {
                 }
 
                 staminaInUse = 2*20;
-                setStamina(stamina - 1);
+                setStamina(stamina - (isBaby() ? 2 : 1));
             } else {
                 this.getAnimation("run").stop();
                 this.getAnimation("walk").setLoop(Animation.Loop.LOOP).play();
@@ -147,6 +151,11 @@ public class ThePlayer extends LocalPlayer {
     }
 
     @Override
+    protected float getMoveSpeed() {
+        return super.getMoveSpeed() * (isBaby() ? 0.9f : 1f);
+    }
+
+    @Override
     public Animation getAnimation(String name) {
         return ((AnimatedObjRenderer) model).getAnimation(name);
     }
@@ -154,7 +163,10 @@ public class ThePlayer extends LocalPlayer {
     @Override
     public Vector3f getHandPos(boolean lefty, float delta) {
         Vector3f pos = getPos(delta);
-        pos.add(new Vector3f(0f, 0.4f, -0.75f).rotate(getRot(delta)));
+        if (isBaby())
+            pos.add(new Vector3f(0f, 0.2f, -0.37f).rotate(getRot(delta)));
+        else
+            pos.add(new Vector3f(0f, 0.4f, -0.75f).rotate(getRot(delta)));
         return pos;
     }
 
@@ -205,6 +217,9 @@ public class ThePlayer extends LocalPlayer {
             onShrooms = 10 * 20; //10s effect
         setStamina(stamina + 10f);
         ((TestWorld) getWorld()).score += 10;
+        foodEaten++;
+        if (isBaby() && foodEaten >= 15)
+            setBaby(false);
     }
 
     public int getFood() {
@@ -262,6 +277,15 @@ public class ThePlayer extends LocalPlayer {
 
     public void setTeleportCooldown(int ticks) {
         this.tpCooldown = ticks;
+    }
+
+    public void setBaby(boolean baby) {
+        this.baby = baby;
+        this.getTransform().setScale(baby ? 0.5f : 1f);
+    }
+
+    public boolean isBaby() {
+        return baby;
     }
 
     @Override

@@ -51,6 +51,7 @@ public class TestWorld extends WorldClient {
     private Den den;
 
     public int score = 0;
+    public int lives = 3;
 
     public TestWorld() {
         this.movement = new LocalInput();
@@ -322,14 +323,33 @@ public class TestWorld extends WorldClient {
             case GLFW.GLFW_KEY_Z -> this.player.useAction();
             case GLFW.GLFW_KEY_X -> this.player.attackAction();
             case GLFW.GLFW_KEY_C -> this.player.dropItem(-1, true);
+
             case GLFW.GLFW_KEY_G -> spawnDebugWeapons();
+            case GLFW.GLFW_KEY_K -> player.kill();
         }
     }
 
     @Override
     public void respawn(boolean init) {
-        this.player = new ThePlayer();
+        this.player = new ThePlayer(!init);
         this.player.getAbilities().set(Abilities.Ability.CAN_BUILD, false);
         this.addEntity(this.player);
+
+        if (!init) {
+            //fint a BabyFox
+            BabyFox fox = null;
+            for (Entity entity : entities.values()) {
+                if (entity instanceof BabyFox babyFox) {
+                    fox = babyFox;
+                    break;
+                }
+            }
+            if (fox != null) {
+                this.player.getTransform().setPos(fox.getTransform().getPos());
+                fox.remove();
+            } else { //den fallback
+                this.player.getTransform().setPos(den.getTransform().getPos());
+            }
+        }
     }
 }
