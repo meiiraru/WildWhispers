@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.github.meiiraru"
-version = "0.0.3"
+version = "1.0.0"
 val mainClass = "whispers.Main"
 
 //dependencies
