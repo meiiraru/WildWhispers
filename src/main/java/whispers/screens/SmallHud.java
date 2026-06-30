@@ -14,7 +14,10 @@ import cinnamon.text.Style;
 import cinnamon.text.Text;
 import cinnamon.utils.*;
 import cinnamon.world.Hud;
+import cinnamon.world.WorldObject;
+import cinnamon.world.entity.Entity;
 import cinnamon.world.terrain.Terrain;
+import whispers.entities.Pumpkin;
 import whispers.entities.ThePlayer;
 import whispers.terrain.VendingMachine;
 import whispers.world.TestWorld;
@@ -85,13 +88,16 @@ public class SmallHud extends Hud {
         int width = Client.getInstance().window.scaledWidth;
         int height = Client.getInstance().window.scaledHeight;
 
-        Pair<Hit, Terrain> hit = player.getLookingTerrain(player.getPickRange());
-        if (hit != null && hit.second() instanceof VendingMachine vm && player.getFood() >= vm.getCost()) {
+        Pair<Hit, ? extends WorldObject> hit = player.getLookingObject(player.getPickRange());
+        boolean vendingMachine = hit != null && hit.second() instanceof VendingMachine vm && player.getFood() >= vm.getCost();
+        boolean pumpkin = hit != null && hit.second() instanceof Pumpkin pmk && pmk.canBeEaten();
+
+        if (vendingMachine || pumpkin) {
             float x = (width - 23) / 2f;
             float y = height * 0.66f;
 
             Text press = Text.translated("whispers.buy_press_1").append(" ").withStyle(Style.EMPTY.outlined(true));
-            Text toBuy = Text.of(" ").append(Text.translated("whispers.buy_press_2").withStyle(Style.EMPTY.outlined(true)));
+            Text toBuy = Text.of(" ").append(Text.translated(vendingMachine ? "whispers.buy_press_2" : "whispers.eat_press_2").withStyle(Style.EMPTY.outlined(true)));
 
             press.render(VertexConsumer.MAIN, matrices, x, y + 9, Alignment.CENTER_RIGHT);
             toBuy.render(VertexConsumer.MAIN, matrices, x + 23, y + 9, Alignment.CENTER_LEFT);
@@ -154,6 +160,15 @@ public class SmallHud extends Hud {
         Text.of("x" + lives)
                 .withStyle(Style.EMPTY.outlined(true))
                 .render(VertexConsumer.MAIN, matrices, 4 + 16 + 2, stamina.getY() + stamina.getHeight() + 4 + 2 + 16 + 2 + 8, Alignment.CENTER_LEFT);
+
+        int day = player.getWorld().getDay();
+        VertexConsumer.MAIN.consume(
+                GeometryHelper.quad(matrices, 4, stamina.getY() + stamina.getHeight() + 4 + 2 + 16 + 2 + 16 + 2, 16, 16),
+                new Resource("whispers", "textures/icons/day.png")
+        );
+        Text.translated("whispers.day_count", day + 1)
+                .withStyle(Style.EMPTY.outlined(true))
+                .render(VertexConsumer.MAIN, matrices, 4 + 16 + 2, stamina.getY() + stamina.getHeight() + 4 + 2 + 16 + 2 + 16 + 2 + 8, Alignment.CENTER_LEFT);
 
         //render score
         //Text.of("Score: " + ((TestWorld) player.getWorld()).score)

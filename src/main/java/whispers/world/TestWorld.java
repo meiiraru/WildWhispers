@@ -51,7 +51,7 @@ public class TestWorld extends WorldClient {
     private Den den;
 
     public int score = 0;
-    public int lives = 3;
+    public int lives = 1;
 
     public TestWorld() {
         this.movement = new LocalInput();
@@ -79,6 +79,7 @@ public class TestWorld extends WorldClient {
 
         playSound(new Resource("whispers", "sounds/wind-rustling-grass.ogg"), SoundCategory.AMBIENT, new Vector3f())
                 .loop(true)
+                .volume(0.3f)
                 .distance(64f);
 
         setTimeMinutes(6*60+30); //6:30AM
@@ -116,7 +117,7 @@ public class TestWorld extends WorldClient {
 
                     case "vending_machine" -> t = new VendingMachine(new AutoBrick(3), 3);
 
-                    case "pumpkin" -> e = new Pumpkin();
+                    case "pumpkin" -> e = new Spawner<>(UUID.randomUUID(), 0, 40*20, () -> new Pumpkin(1000 / ((int) (Math.random() * 3f) + 1)));
                     case "spawn" -> {
                         e = den = new Den();
                         //add two baby foxes next to the den
@@ -126,6 +127,7 @@ public class TestWorld extends WorldClient {
                         BabyFox fox2 = new BabyFox();
                         fox2.getTransform().setPos(transform.getPos().add(-1, 0, 0, new Vector3f()));
                         addEntity(fox2);
+                        lives += 2;
                     }
                     case "trap" -> e = new BearTrap();
                     case "bush" -> e = new Bush();
@@ -134,6 +136,12 @@ public class TestWorld extends WorldClient {
 
                     case "dog_spawner" -> {
                         e = new Spawner<>(UUID.randomUUID(), 0, 15*20, Dog::new);
+                        ((Spawner<?>) e).setRenderCooldown(false);
+                    }
+                    case "bird_spawner" -> {
+                        Vector3f pos = transform.getPos();
+                        float x = pos.x, y = pos.y, z = pos.z;
+                        e = new Spawner<>(UUID.randomUUID(), 0, 30*20, () -> new Bird(x, y, z));
                         ((Spawner<?>) e).setRenderCooldown(false);
                     }
                     default -> {
@@ -185,7 +193,7 @@ public class TestWorld extends WorldClient {
         Entity closest = null;
         float closestDist = 15f;
         for (Entity entity : entities.values()) {
-            if (entity instanceof Dog dog && !dog.isDead()) {
+            if ((entity instanceof Dog dog && !dog.isDead()) || (entity instanceof Bird bird && !bird.isDead())) {
                 Vector3f toEntity = entity.getTransform().getPos().sub(player.getTransform().getPos(), new Vector3f());
                 float dist = toEntity.length();
                 if (dist < closestDist) {
@@ -326,6 +334,7 @@ public class TestWorld extends WorldClient {
 
             case GLFW.GLFW_KEY_G -> spawnDebugWeapons();
             case GLFW.GLFW_KEY_K -> player.kill();
+            case GLFW.GLFW_KEY_H -> player.giveItem(new AutoBrick(3));
         }
     }
 

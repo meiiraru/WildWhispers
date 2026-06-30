@@ -53,7 +53,15 @@ public class WhisperDeath extends Screen {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
 
-        Text.translated("whispers.ded").withStyle(Style.EMPTY.outlined(true).color(0xFF880000))
+        Text text;
+        boolean gameOver = ((TestWorld) client.world).lives <= 0;
+        if (gameOver) {
+            text = Text.translated("whispers.game_over_1").append("\n\n").append(Text.translated("whispers.game_over_2", client.world.getDay() + 1));
+        } else {
+            text = Text.translated("whispers.ded");
+        }
+
+        text.withStyle(Style.EMPTY.outlined(true).color(0xFF880000))
                 .render(VertexConsumer.MAIN, matrices, width / 2f, height / 2f - 60, Alignment.TOP_CENTER);
     }
 

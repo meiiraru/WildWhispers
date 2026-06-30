@@ -2,6 +2,8 @@
   "gui.play": "Play",
 
   "whispers.ded": "You died...",
+  "whispers.game_over_1": "Game Over",
+  "whispers.game_over_2": "You survived %s days",
   "whispers.respawn": "Respawn",
   "whispers.main_menu": "End it all",
   "whispers.leave": "Are you sure you want to leave?",
@@ -9,6 +11,7 @@
 
   "whispers.buy_press_1": "Press",
   "whispers.buy_press_2": "to buy",
+  "whispers.eat_press_2": "to eat",
 
   "whispers.intro": "Life is hard in the wild, protect yourself and your family!",
   "whispers.intro2": "Find food so you can survive!",

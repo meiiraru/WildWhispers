@@ -7,6 +7,7 @@ import cinnamon.render.Camera;
 import cinnamon.render.MatrixStack;
 import cinnamon.render.model.AnimatedObjRenderer;
 import cinnamon.render.model.ModelRenderer;
+import cinnamon.sound.SoundCategory;
 import cinnamon.utils.Resource;
 import cinnamon.world.DamageType;
 import cinnamon.world.entity.Entity;
@@ -41,6 +42,8 @@ public class ThePlayer extends LocalPlayer {
     private int eventTimer = 0;
 
     private int tpCooldown = 0;
+
+    private float footstep = 0f;
 
     public ThePlayer(boolean baby) {
         super();
@@ -118,6 +121,28 @@ public class ThePlayer extends LocalPlayer {
     }
 
     @Override
+    public void tickPhysics() {
+        boolean wasOnGround = this.onGround;
+
+        super.tickPhysics();
+
+        if (wasOnGround && this.onGround) {
+            Vector3f pos = getTransform().getPos();
+            float dx = pos.x - oPos.x;
+            float dz = pos.z - oPos.z;
+            float dist = Math.sqrt(dx * dx + dz * dz);
+
+            footstep += dist;
+
+            if (footstep >= 2f) {
+                footstep = 0f;
+                String path = pos.y > 0.75f ? "sounds/grass.ogg" : "sounds/water.ogg";
+                ((WorldClient) getWorld()).playSound(new Resource("whispers", path), SoundCategory.ENTITY, getTransform().getPos()).volume(0.2f).pitch(Maths.range(0.9f, 1.1f));
+            }
+        }
+    }
+
+    @Override
     protected void renderModel(Camera camera, MatrixStack matrices, float delta) {
         if (model != null)
             model.render(matrices);
@@ -184,6 +209,7 @@ public class ThePlayer extends LocalPlayer {
             showEvent(EventType.HURT, 3*20);
 
             ((TestWorld) getWorld()).score -= 50;
+            ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/hurt.ogg"), SoundCategory.ENTITY, getTransform().getPos());
 
             return true;
         }
@@ -220,6 +246,7 @@ public class ThePlayer extends LocalPlayer {
         foodEaten++;
         if (isBaby() && foodEaten >= 15)
             setBaby(false);
+        ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/eat.ogg"), SoundCategory.ENTITY, getTransform().getPos()).volume(0.3f);
     }
 
     public int getFood() {

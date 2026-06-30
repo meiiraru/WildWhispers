@@ -4,11 +4,13 @@ import cinnamon.animation.Animation;
 import cinnamon.math.Maths;
 import cinnamon.math.collision.Hit;
 import cinnamon.registry.EntityRegistry;
+import cinnamon.sound.SoundCategory;
 import cinnamon.utils.Resource;
 import cinnamon.world.DamageType;
 import cinnamon.world.entity.PhysEntity;
 import cinnamon.world.entity.living.LivingEntity;
 import cinnamon.world.entity.living.Player;
+import cinnamon.world.world.WorldClient;
 import org.joml.Math;
 import org.joml.Vector3f;
 import whispers.world.TestWorld;
@@ -23,6 +25,7 @@ public class Dog extends LivingEntity {
 
     private int wanderCooldown = 0;
     private final Vector3f wanderTarget = new Vector3f();
+    private boolean chasing = false;
 
     public Dog() {
         super(UUID.randomUUID(), MODEL_PATH, 0.5f, 15, 0);
@@ -41,7 +44,13 @@ public class Dog extends LivingEntity {
             this.getAnimation("run").setLoop(Animation.Loop.LOOP).play();
             this.getAnimation("walk").stop();
             wanderCooldown = 0;
+
+            boolean wasChasing = chasing;
+            chasing = true;
+            if (!wasChasing)
+                ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/bark.ogg"), SoundCategory.ENTITY, getTransform().getPos());
         } else {
+            chasing = false;
             this.getAnimation("run").stop();
 
             if (--wanderCooldown <= 0) {
@@ -65,7 +74,8 @@ public class Dog extends LivingEntity {
         super.collideEntity(entity, result, toMove);
 
         if (entity instanceof Player player) {
-            player.damage(this, DamageType.MELEE, 10, false);
+            if (player.damage(this, DamageType.MELEE, 10, false))
+                ((WorldClient) getWorld()).playSound(new Resource("whispers", "sounds/bite.ogg"), SoundCategory.ENTITY, getTransform().getPos());
         }
     }
 
