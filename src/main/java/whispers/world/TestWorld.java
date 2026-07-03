@@ -19,6 +19,7 @@ import cinnamon.world.Abilities;
 import cinnamon.world.entity.Entity;
 import cinnamon.world.entity.collectable.ItemEntity;
 import cinnamon.world.entity.misc.Spawner;
+import cinnamon.world.entity.projectile.Brick;
 import cinnamon.world.items.BrickItem;
 import cinnamon.world.particle.RainParticle;
 import cinnamon.world.sky.SkyColors;
@@ -334,7 +335,16 @@ public class TestWorld extends WorldClient {
 
             case GLFW.GLFW_KEY_G -> spawnDebugWeapons();
             case GLFW.GLFW_KEY_K -> player.kill();
-            case GLFW.GLFW_KEY_H -> player.giveItem(new AutoBrick(3));
+            case GLFW.GLFW_KEY_H -> player.giveItem(new AutoBrick(300));
+            case GLFW.GLFW_KEY_J -> {
+                for (Entity entity : entities.values()) {
+                    if (entity instanceof Dog || entity instanceof Bird) {
+                        Brick b = new Brick(UUID.randomUUID(), null);
+                        b.setPos(entity.getTransform().getPos().add(0, 3, 0, new Vector3f()));
+                        addEntity(b);
+                    }
+                }
+            }
         }
     }
 
