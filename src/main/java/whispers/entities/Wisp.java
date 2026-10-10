@@ -31,7 +31,8 @@ public class Wisp extends PhysEntity {
         //    VertexConsumer.WORLD_MAIN_EMISSIVE.consume(GeometryHelper.box(matrices, -r, -r, -r, r, r, r, Colors.BLUE.argb));
         //    matrices.popMatrix();
         //});
-        this.light = new PointLight().falloff(1f).glareSize(3f).color(Colors.BLUE.rgb).castsShadows(true).intensity(0f);
+        this.light = new PointLight().falloff(1f).glareSize(3f).color(Colors.BLUE.rgb).intensity(0f);
+        this.light.setCastShadows(true);
     }
 
     @Override
@@ -61,7 +62,7 @@ public class Wisp extends PhysEntity {
             ((WorldClient) getWorld()).addParticle(particle);
         }
 
-        Vector3f playerPos = ((WorldClient) getWorld()).player.getTransform().getPos();
+        Vector3f playerPos = ((WorldClient) getWorld()).playerEntity.getTransform().getPos();
         float distance = playerPos.distance(pos);
         float delta = distance > 100 ? 0f : (force ? 1f : (world.isNight() ? Maths.clamp((distance - 5f) / 5f, 0f, 1f) : 0f));
         light.intensity(5f * delta);

@@ -1,9 +1,10 @@
 package whispers.entities;
 
+import cinnamon.math.collision.Hit;
 import cinnamon.registry.EntityRegistry;
 import cinnamon.utils.Resource;
+import cinnamon.world.entity.Entity;
 import cinnamon.world.entity.PhysEntity;
-import cinnamon.world.entity.living.LivingEntity;
 import whispers.items.FoodType;
 
 import java.util.UUID;
@@ -30,9 +31,9 @@ public class Pumpkin extends PhysEntity {
     }
 
     @Override
-    public boolean onUse(LivingEntity source) {
+    public boolean onUse(Entity source, Hit hit) {
         if (!(source instanceof ThePlayer player))
-            return super.onUse(source);
+            return super.onUse(source, hit);
 
         if (!canBeEaten())
             return false;

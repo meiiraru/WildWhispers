@@ -29,7 +29,7 @@ public class Bush extends PhysEntity {
 
     public Bush() {
         super(UUID.randomUUID(), model);
-        this.modelFruity = ModelManager.load(model_fruity);
+        this.modelFruity = ModelManager.getRenderer(model_fruity);
     }
 
     @Override

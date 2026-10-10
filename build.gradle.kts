@@ -2,12 +2,18 @@ plugins {
     java
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+}
+
 group = "com.github.meiiraru"
-version = "1.0.0"
+version = "1.0.1"
 val mainClass = "whispers.Main"
 
 //dependencies
-val cinnamonVersion = "0.4.5"
+val cinnamonVersion = "0.5.4"
 
 val lwjglModules = arrayOf(
     "lwjgl",
@@ -65,6 +71,14 @@ dependencies {
     }
 }
 
+tasks.withType<JavaExec> {
+    jvmArgs(
+        "--enable-native-access=ALL-UNNAMED",
+        "-Dorg.lwjgl.system.allocator=system",
+        "--sun-misc-unsafe-memory-access=allow"
+    )
+}
+
 tasks.register<Jar>("fatJar") {
     archiveClassifier.set(os)
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -79,4 +93,58 @@ tasks.jar {
     archiveClassifier.set("")
     manifest.attributes["Main-Class"] = mainClass
     //from("LICENSE.md")
+}
+
+tasks.register<Exec>("packageApp") {
+    description = "Packages the application into a platform-specific format using jpackage"
+    dependsOn("fatJar")
+
+    val isWindows = os.contains("windows")
+    val appName = "${project.name}-${project.version}-$os"
+    val outputDir = layout.buildDirectory.dir("dist/$appName").get().asFile
+    val stagingDir = layout.buildDirectory.dir("staging").get().asFile
+
+    val fatJarTask = tasks.named<Jar>("fatJar")
+    val fatJarFileNameProvider = fatJarTask.flatMap { it.archiveFileName }
+    val fatJarFileProvider = fatJarTask.flatMap { it.archiveFile }
+
+    doFirst {
+        outputDir.deleteRecursively()
+        stagingDir.deleteRecursively()
+        stagingDir.mkdirs()
+
+        val fatJarFile = fatJarFileProvider.get().asFile
+        fatJarFile.copyTo(File(stagingDir, fatJarFile.name), overwrite = true)
+    }
+
+    val compiler = javaToolchains.compilerFor(java.toolchain).get()
+    val jdkHome = compiler.metadata.installationPath.asFile
+    val jpackageBin = if (isWindows) {
+        File(jdkHome, "bin/jpackage.exe").absolutePath
+    } else {
+        File(jdkHome, "bin/jpackage").absolutePath
+    }
+
+    //val iconExtension = if (isWindows) "ico" else "png"
+    //val iconFile = file("src/main/resources/resources/vanilla/textures/icon.$iconExtension")
+
+    workingDir = projectDir
+
+    val jpackageArgs = listOf(
+        jpackageBin,
+        "--type", "app-image",
+        "--name", appName,
+        "--input", stagingDir.absolutePath,
+        "--main-jar", fatJarFileNameProvider.get(),
+        "--main-class", mainClass,
+        "--dest", layout.buildDirectory.dir("dist").get().asFile.absolutePath,
+        "--app-version", project.version.toString(),
+        //"--icon", iconFile.absolutePath
+    )
+
+    commandLine(jpackageArgs)
+
+    doLast {
+        stagingDir.deleteRecursively()
+    }
 }

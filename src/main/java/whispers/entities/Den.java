@@ -5,8 +5,8 @@ import cinnamon.math.collision.Hit;
 import cinnamon.registry.EntityRegistry;
 import cinnamon.text.Text;
 import cinnamon.utils.Resource;
+import cinnamon.world.entity.Entity;
 import cinnamon.world.entity.PhysEntity;
-import cinnamon.world.entity.living.LivingEntity;
 import cinnamon.world.world.World;
 import org.joml.Vector3f;
 import whispers.world.TestWorld;
@@ -39,7 +39,7 @@ public class Den extends PhysEntity {
     }
 
     @Override
-    public boolean onUse(LivingEntity source) {
+    public boolean onUse(Entity source, Hit hit) {
         if (source instanceof ThePlayer player && getWorld().isNight()) {
             player.setPos(getPos(0f).add(0, 0.5f, 0));
             //player.setFood(0);
@@ -56,7 +56,7 @@ public class Den extends PhysEntity {
             return true;
         }
 
-        return super.onUse(source);
+        return super.onUse(source, hit);
     }
 
     @Override

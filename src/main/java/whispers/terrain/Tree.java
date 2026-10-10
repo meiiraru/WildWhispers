@@ -22,7 +22,7 @@ public class Tree extends Terrain {
 
         if (getWorld().getTime() % 20 == 0) {
             LeafParticle leaf = new LeafParticle(600); //30s
-            Vector3f pos = getAABB().getRandomPoint();
+            Vector3f pos = getAABB().getRandomPoint(new Vector3f());
             pos.y = getAABB().minY() + getAABB().getHeight() * 0.75f;
             leaf.setPos(pos);
             leaf.setMotion((float) Math.random() * 0.2f - 0.1f, -0.1f, (float) Math.random() * 0.2f - 0.1f);

@@ -13,7 +13,7 @@ public class MainWorldTP extends TriggerArea {
 
     public MainWorldTP() {
         super(UUID.randomUUID(), 3f, 2f, 3f);
-        this.model = ModelManager.load(new Resource("whispers", "models/pumpkin/model.obj"));
+        this.model = ModelManager.getRenderer(new Resource("whispers", "models/pumpkin/model.obj"));
 
         addRenderFeature((entity, camera, matrices, delta) -> {
             matrices.pushMatrix();

@@ -6,7 +6,7 @@ import cinnamon.math.collision.Hit;
 import cinnamon.registry.EntityRegistry;
 import cinnamon.sound.SoundCategory;
 import cinnamon.utils.Resource;
-import cinnamon.world.DamageType;
+import cinnamon.world.entity.DamageType;
 import cinnamon.world.entity.PhysEntity;
 import cinnamon.world.entity.living.LivingEntity;
 import cinnamon.world.world.WorldClient;
@@ -42,7 +42,7 @@ public class Bird extends LivingEntity {
 
         ticks++;
 
-        ThePlayer player = (ThePlayer) ((TestWorld) getWorld()).player;
+        ThePlayer player = (ThePlayer) ((TestWorld) getWorld()).playerEntity;
 
         if (--diveDelay <= 0 && getWorld().isNight() && player.getFood() > 20 && player.getTransform().getPos().distanceSquared(getTransform().getPos()) < 15f * 15f) {
             //dive towards player

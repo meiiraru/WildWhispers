@@ -24,7 +24,7 @@ public class BabyFox extends PhysEntity {
     public void tick() {
         super.tick();
 
-        lookAt(((TestWorld) getWorld()).player.getPos(1f));
+        lookAt(((TestWorld) getWorld()).playerEntity.getPos(1f));
 
         if (--jumpTicks <= 0) {
             this.impulse.set(0f, 0.2f, 0f);

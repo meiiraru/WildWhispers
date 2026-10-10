@@ -13,10 +13,8 @@ import cinnamon.render.texture.Texture;
 import cinnamon.text.Style;
 import cinnamon.text.Text;
 import cinnamon.utils.*;
-import cinnamon.world.Hud;
 import cinnamon.world.WorldObject;
-import cinnamon.world.entity.Entity;
-import cinnamon.world.terrain.Terrain;
+import cinnamon.world.gui.Hud;
 import whispers.entities.Pumpkin;
 import whispers.entities.ThePlayer;
 import whispers.terrain.VendingMachine;
@@ -83,7 +81,7 @@ public class SmallHud extends Hud {
 
     @Override
     public void render(MatrixStack matrices, float delta) {
-        ThePlayer player = (ThePlayer) Client.getInstance().world.player;
+        ThePlayer player = (ThePlayer) Client.getInstance().world.playerEntity;
 
         int width = Client.getInstance().window.scaledWidth;
         int height = Client.getInstance().window.scaledHeight;

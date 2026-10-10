@@ -4,7 +4,6 @@ import cinnamon.gui.Screen;
 import cinnamon.gui.screens.SettingsScreen;
 import cinnamon.gui.widgets.ContainerGrid;
 import cinnamon.gui.widgets.types.Button;
-import cinnamon.math.Rotation;
 import cinnamon.model.GeometryHelper;
 import cinnamon.model.Vertex;
 import cinnamon.render.MatrixStack;
@@ -56,7 +55,7 @@ public class MainMenu extends Screen {
         float angle = Math.sin((client.ticks + delta) * 0.005f) * 7f;
 
         matrices.scale(scale);
-        matrices.rotate(Rotation.Z.rotationDeg(angle));
+        matrices.rotateZ(angle);
 
         VertexConsumer.MAIN.consume(
                 GeometryHelper.quad(matrices, -width/2f, -height/2f, width, height),

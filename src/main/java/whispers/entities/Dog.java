@@ -6,7 +6,7 @@ import cinnamon.math.collision.Hit;
 import cinnamon.registry.EntityRegistry;
 import cinnamon.sound.SoundCategory;
 import cinnamon.utils.Resource;
-import cinnamon.world.DamageType;
+import cinnamon.world.entity.DamageType;
 import cinnamon.world.entity.PhysEntity;
 import cinnamon.world.entity.living.LivingEntity;
 import cinnamon.world.entity.living.Player;
@@ -36,7 +36,7 @@ public class Dog extends LivingEntity {
     public void tick() {
         super.tick();
 
-        Player player = ((TestWorld) getWorld()).player;
+        Player player = (Player) ((TestWorld) getWorld()).playerEntity;
         float distance = player.getTransform().getPos().distanceSquared(getTransform().getPos());
         if (distance <= 8*8 && distance > 0.1f) {
             this.lookAt(player.getTransform().getPos());

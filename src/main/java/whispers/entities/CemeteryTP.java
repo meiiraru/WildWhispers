@@ -1,6 +1,5 @@
 package whispers.entities;
 
-import cinnamon.math.Rotation;
 import cinnamon.model.ModelManager;
 import cinnamon.render.model.ModelRenderer;
 import cinnamon.utils.Resource;
@@ -14,7 +13,7 @@ public class CemeteryTP extends TriggerArea {
 
     public CemeteryTP() {
         super(UUID.randomUUID(), 3f, 2f, 3f);
-        this.model = ModelManager.load(new Resource("whispers", "models/tombstone/model.obj"));
+        this.model = ModelManager.getRenderer(new Resource("whispers", "models/tombstone/model.obj"));
 
         addRenderFeature((entity, camera, matrices, delta) -> {
             if (!getWorld().isNight())
@@ -22,7 +21,7 @@ public class CemeteryTP extends TriggerArea {
 
             matrices.pushMatrix();
             matrices.translate(getPos(delta));
-            matrices.rotate(Rotation.Z.rotationDeg(-22.5f));
+            matrices.rotateZ(-22.5f);
             model.render(matrices);
             matrices.popMatrix();
         });

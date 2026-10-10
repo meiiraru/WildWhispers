@@ -1,8 +1,8 @@
 package whispers.terrain;
 
 import cinnamon.math.Maths;
-import cinnamon.math.Rotation;
-import cinnamon.math.collision.AABB;
+import cinnamon.math.collision.Hit;
+import cinnamon.math.collision.shape.AABB;
 import cinnamon.model.GeometryHelper;
 import cinnamon.registry.TerrainRegistry;
 import cinnamon.render.Camera;
@@ -52,7 +52,7 @@ public class VendingMachine extends Terrain {
         matrices.scale(s, s, s);
 
         camera.billboard(matrices);
-        matrices.rotate(Rotation.Z.rotationDeg(180));
+        matrices.rotateZ(180f);
 
         VertexConsumer.WORLD_MAIN.consume(GeometryHelper.quad(
                 matrices, -16, -8, 16, 16
@@ -71,8 +71,8 @@ public class VendingMachine extends Terrain {
 
         matrices.pushMatrix();
         matrices.translate(-bb.getWidth() / 2f, bb.getHeight(), 0.15f);
-        matrices.rotate(Rotation.X.rotationDeg(30f));
-        matrices.rotate(Rotation.Z.rotationDeg(-70f));
+        matrices.rotateX(30f);
+        matrices.rotateZ(-70f);
         matrices.scale(2f);
 
         item.render(ItemRenderContext.ENTITY, matrices, delta);
@@ -93,8 +93,8 @@ public class VendingMachine extends Terrain {
     }
 
     @Override
-    public boolean interact(Entity entity) {
-        if (super.interact(entity))
+    public boolean interact(Entity entity, Hit hit) {
+        if (super.interact(entity, hit))
             return true;
 
         if (!(entity instanceof ThePlayer player))
@@ -106,7 +106,7 @@ public class VendingMachine extends Terrain {
         player.setFood(player.getFood() - cost);
 
         Vector3f dropPos = getAABB().getCenter();
-        Vector3f dir = Maths.quatToDir(getTransform().getRot()).rotateY(Math.PI_f);
+        Vector3f dir = Maths.quatToDir(getTransform().getRot());
 
         ItemEntity itemEntity = new ItemEntity(UUID.randomUUID(), item.copy());
         itemEntity.setPos(dropPos);

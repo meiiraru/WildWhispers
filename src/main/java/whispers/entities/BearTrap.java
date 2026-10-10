@@ -5,7 +5,7 @@ import cinnamon.math.collision.Hit;
 import cinnamon.registry.EntityRegistry;
 import cinnamon.sound.SoundCategory;
 import cinnamon.utils.Resource;
-import cinnamon.world.DamageType;
+import cinnamon.world.entity.DamageType;
 import cinnamon.world.entity.Entity;
 import cinnamon.world.entity.PhysEntity;
 import cinnamon.world.entity.collectable.ItemEntity;
@@ -81,7 +81,7 @@ public class BearTrap extends PhysEntity {
                 snapTime = 60 + snapAnim; //3s + anim time
                 target = le;
             } else {
-                target = le.dropItem(-1, true);
+                target = le.dropItem(-1, -1);
             }
 
             le.damage(null, DamageType.TERRAIN, 10, false);

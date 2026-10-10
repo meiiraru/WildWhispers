@@ -3,13 +3,14 @@ package whispers.entities;
 import cinnamon.animation.Animation;
 import cinnamon.math.Maths;
 import cinnamon.model.ModelManager;
+import cinnamon.registry.LivingModelRegistry;
 import cinnamon.render.Camera;
 import cinnamon.render.MatrixStack;
-import cinnamon.render.model.AnimatedObjRenderer;
+import cinnamon.render.model.AnimatedMeshRenderer;
 import cinnamon.render.model.ModelRenderer;
 import cinnamon.sound.SoundCategory;
 import cinnamon.utils.Resource;
-import cinnamon.world.DamageType;
+import cinnamon.world.entity.DamageType;
 import cinnamon.world.entity.Entity;
 import cinnamon.world.entity.living.LocalPlayer;
 import cinnamon.world.items.Item;
@@ -46,11 +47,49 @@ public class ThePlayer extends LocalPlayer {
     private float footstep = 0f;
 
     public ThePlayer(boolean baby) {
-        super();
-        this.model = ModelManager.load(MODEL_PATH);
+        super("player", LivingModelRegistry.STRAWBERRY);
+        this.model = ModelManager.getRenderer(MODEL_PATH);
         this.getInventory().setSize(1);
         this.getAnimation("idle").setLoop(Animation.Loop.LOOP).play();
         this.setBaby(baby);
+
+        this.controller.clearActions();
+        this.controller.bindVector3D("movement",
+                TestWorld.LEFT_KEYBIND, TestWorld.RIGHT_KEYBIND,
+                TestWorld.JUMP_KEYBIND, TestWorld.NONE_KEYBIND,
+                TestWorld.UP_KEYBIND, TestWorld.DOWN_KEYBIND, (x, y, z) -> {
+                    if (this.isOnShrooms()) {
+                        x = -x;
+                        z = -z;
+                    }
+                    this.impulse(x, y, z);
+                }
+        );
+        this.controller.bindState(
+                "sprint", TestWorld.SPRINT_KEYBIND,
+                sprinting -> {
+                    pressingForwards = sprinting;
+                    updateMovementFlags(this.isSneaking(), sprinting, this.isFlying());
+                }
+        );
+        this.controller.bindState(
+                "use", TestWorld.USE_KEYBIND,
+                bool -> {
+                    if (bool) useAction();
+                }
+        );
+        this.controller.bindState(
+                "attack", TestWorld.ATTACK_KEYBIND,
+                bool -> {
+                    if (bool) attackAction();
+                }
+        );
+        this.controller.bindState(
+                "attack", TestWorld.DROP_KEYBIND,
+                bool -> {
+                    if (bool) dropItem(-1, -1);
+                }
+        );
 
         /*
         addRenderFeature((source, camera, matrices, delta) -> {
@@ -182,7 +221,7 @@ public class ThePlayer extends LocalPlayer {
 
     @Override
     public Animation getAnimation(String name) {
-        return ((AnimatedObjRenderer) model).getAnimation(name);
+        return ((AnimatedMeshRenderer) model).getAnimation(name);
     }
 
     @Override
